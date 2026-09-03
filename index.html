@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大学文字模拟器 · UniLifeSim</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <!-- 封面 / 主菜单 -->
+  <section id="screen-home" class="screen active">
+    <div class="home-box">
+      <h1 class="logo">🎓 大学文字模拟器</h1>
+      <p class="sub">四年青春，从第一堂高数课开始。你的选择，决定结局。</p>
+      <div class="home-actions">
+        <button id="btn-new" class="btn btn-primary">📝 新的开始</button>
+        <button id="btn-continue" class="btn" style="display:none">💾 继续上次</button>
+        <button id="btn-gallery" class="btn">🏆 结局图鉴</button>
+      </div>
+      <p class="tiny" id="play-count"></p>
+    </div>
+  </section>
+
+  <!-- 捏人 -->
+  <section id="screen-create" class="screen">
+    <div class="create-box">
+      <h2>👤 新建角色</h2>
+      <label>你的名字<input id="c-name" maxlength="8" placeholder="留空随机"></label>
+      <fieldset><legend>性格 · 决定初始属性</legend><div id="c-personas" class="opt-grid"></div></fieldset>
+      <fieldset><legend>家境 · 决定生活费</legend><div id="c-families" class="opt-grid"></div></fieldset>
+      <fieldset><legend>专业方向</legend><div id="c-majors" class="opt-grid"></div></fieldset>
+      <fieldset><legend>心动对象（可选 · 影响恋爱线）</legend>
+        <div id="c-crushtypes" class="opt-grid"></div>
+        <label>TA 的名字（留空自动）<input id="c-crush" maxlength="6" placeholder="例如：林小满"></label>
+      </fieldset>
+      <div class="row">
+        <button id="btn-random" class="btn">🎲 随机一局</button>
+        <button id="btn-begin" class="btn btn-primary">🚀 开始大学生活</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 游戏主体 -->
+  <section id="screen-game" class="screen">
+    <aside id="side">
+      <div id="topbar">
+        <div class="who"><span id="g-name"></span><span id="g-major"></span><span id="g-path" class="chip"></span></div>
+        <div id="g-time" class="time"></div>
+        <div class="money-line">💰 余额 <b id="g-money">0</b> 元 <span id="g-fam"></span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>📚 学业</span><div class="bar"><i id="bar-ac"></i></div><b id="num-ac"></b></div>
+        <div class="stat"><span>🗣️ 社交</span><div class="bar"><i id="bar-so"></i></div><b id="num-so"></b></div>
+        <div class="stat"><span>💪 体质</span><div class="bar"><i id="bar-hp"></i></div><b id="num-hp"></b></div>
+        <div class="stat"><span>😊 心态</span><div class="bar"><i id="bar-mo"></i></div><b id="num-mo"></b></div>
+        <div class="stat"><span>❤️ 恋爱</span><div class="bar love"><i id="bar-love"></i></div><b id="num-love"></b></div>
+      </div>
+      <div class="record">
+        <div>🎯 绩点 <b id="r-gpa">0</b></div>
+        <div>📉 挂科 <b id="r-fails">0</b></div>
+        <div>🏅 奖学金 <b id="r-scholar">0</b> 次</div>
+        <div id="r-crush" class="tiny2"></div>
+      </div>
+      <button id="btn-save" class="btn btn-mini">💾 保存</button>
+      <button id="btn-menu" class="btn btn-mini">🏠 主菜单</button>
+    </aside>
+    <main id="main">
+      <div id="log"></div>
+      <div id="choices" class="choices"></div>
+    </main>
+  </section>
+
+  <!-- 结局 -->
+  <section id="screen-ending" class="screen">
+    <div class="ending-box">
+      <div id="end-icon" class="end-icon"></div>
+      <h2 id="end-title"></h2>
+      <div id="end-rank" class="rank"></div>
+      <div id="end-name" class="end-name"></div>
+      <div id="end-text" class="end-text"></div>
+      <div id="end-stats" class="end-stats"></div>
+      <div id="end-epilog" class="end-epilog"></div>
+      <div class="row">
+        <button id="btn-again" class="btn btn-primary">🔁 再来四年</button>
+        <button id="btn-gallery2" class="btn">🏆 图鉴</button>
+        <button id="btn-home2" class="btn">🏠 主菜单</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 图鉴 -->
+  <section id="screen-gallery" class="screen">
+    <div class="gallery-box">
+      <h2>🏆 结局图鉴</h2>
+      <div id="gallery-list"></div>
+      <div class="row"><button id="btn-gback" class="btn">← 返回</button></div>
+    </div>
+  </section>
+</div>
+
+<script src="js/data/core.js"></script>
+<script src="js/data/actions.js"></script>
+<script src="js/data/events_junior.js"></script>
+<script src="js/data/events_senior.js"></script>
+<script src="js/data/beats.js"></script>
+<script src="js/data/endings.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
