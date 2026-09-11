@@ -29,11 +29,17 @@
     var sb = persona.stats || {};
     var crushName = (p.crushName && String(p.crushName).trim()) || null;
     var crushType = find(DATA.crushTypes, p.crushTypeId) || pick(DATA.crushTypes);
+    var gender = ['man','woman','nonbinary','unspecified'].includes(p.gender) ? p.gender : 'unspecified';
+    var orientation = ['women','men','nonbinary','any','none'].includes(p.orientation) ? p.orientation : 'any';
+    var crushGender = {women:'woman',men:'man',nonbinary:'nonbinary'}[orientation] || pick(['woman','man','nonbinary']);
 
     var st = {
       v: 1, // 存档版本
       meta: {
         name: (p.name && String(p.name).trim()) || "无名氏",
+        gender: gender,
+        orientation: orientation,
+        crushGender: orientation==='none' ? null : crushGender,
         personaId: persona.id,
         familyId: family.id,
         majorId: major.id,
@@ -87,7 +93,8 @@
     if (!text) return "";
     var major = find(DATA.majors, st.meta.majorId);
     return TX(text)
-      .replace(/\{crush\}/g, st.meta.crushName)
+      .replace(/\{crush\}/g, st.meta.orientation==='none' ? '朋友' : st.meta.crushName)
+      .replace(/小伙子/g, st.meta.gender==='man' ? '小伙子' : '同学')
       .replace(/\{major\}/g, major ? major.name : "你的专业")
       .replace(/\{name\}/g, st.meta.name);
   }
@@ -152,7 +159,7 @@
     if (fx.hp) st.hp += fx.hp;
     if (fx.mo) st.mo += fx.mo;
     if (fx.money) st.money += fx.money;
-    if (fx.love) st.love += fx.love;
+    if (fx.love && st.meta.orientation!=='none') st.love += fx.love;
     if (fx.counters) {
       var ks = Object.keys(fx.counters);
       for (var i = 0; i < ks.length; i++) st.counters[ks[i]] = (st.counters[ks[i]] || 0) + fx.counters[ks[i]];
@@ -160,6 +167,7 @@
     if (fx.flags) {
       for (var j = 0; j < fx.flags.length; j++) {
         var f = fx.flags[j];
+        if(st.meta.orientation==='none' && ['crush_met','couple','confessed','heartbroken'].includes(f)) continue;
         st.flags[f] = true;
         if (f === "crush_met") st.crushMet = true;
         if (f === "couple") st.couple = true;
@@ -177,6 +185,7 @@
 
   // 恋爱自动升温：感情到位却没确立 → 顺理成章在一起（大二下之后 love≥60）
   function autoCouple(st) {
+    if(st.meta.orientation==='none') return;
     if (!st.couple && st.crushMet && !st.flags["heartbroken"] && st.love >= 60 && st.sem >= 3) {
       st.couple = true;
       st.flags["couple"] = true;
@@ -353,6 +362,7 @@
     var generic = null;
     for (var i = 0; i < DATA.beats.length; i++) {
       var b = DATA.beats[i];
+      if(st.meta.orientation==='none' && b.id==='b_s2_w2') continue;
       if (!b.at || b.at.sem !== st.sem || b.at.week !== st.week) continue;
       if (st.seenBeats[b.id]) continue;
       if (!condOk(st, b.cond)) continue;
@@ -380,6 +390,7 @@
     var pool = [];
     for (var i = 0; i < DATA.events.length; i++) {
       var ev = DATA.events[i];
+      if(st.meta.orientation==='none' && /\{crush\}|crush_met|couple|confessed|heartbroken/.test(JSON.stringify(ev))) continue;
       if (ev.once && st.seenEvents[ev.id]) continue;
       if (ev.semIn && ev.semIn.indexOf(st.sem) < 0) continue;
       if (ev.minSem !== undefined && st.sem < ev.minSem) continue;

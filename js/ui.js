@@ -29,9 +29,12 @@
     var m = { kaoyan: "考研", civil: "考公", job: "就业", startup: "创业", lieflat: "躺平", postgrad: "保研" };
     return p ? m[p] || p : "";
   }  function saveState() {
-    if (!current) return;
-    try { localStorage.setItem(SAVE_KEY, U.serialize(current)); } catch (e) { /* ignore */ }
+    if (!current) return false;
+    try { localStorage.setItem(SAVE_KEY, U.serialize(current)); return true; } catch (e) { notify('未能保存：浏览器存储不可用或已满，请勿关闭页面。'); return false; }
   }
+  var toastTimer;
+  function localStorageSafeExists(){try{return !!localStorage.getItem(SAVE_KEY);}catch(e){return false;}}
+  function notify(message) { clearTimeout(toastTimer); $('save-status').textContent=message; $('save-status').hidden=false; toastTimer=setTimeout(function(){$('save-status').hidden=true;},4500); }
   function loadGallery() {
     try { return JSON.parse(localStorage.getItem(GALLERY_KEY) || "[]"); } catch (e) { return []; }
   }
@@ -59,7 +62,8 @@
     var box = $(containerId);
     box.innerHTML = "";
     list.forEach(function (item) {
-      var card = el("div", "opt-card");
+      var card = el("button", "opt-card");
+      card.type = 'button';
       var b = el("b", null, (item.icon ? item.icon + " " : "") + item.name);
       var sp = el("span", null, item.desc);
       card.appendChild(b); card.appendChild(sp);
@@ -81,6 +85,7 @@
     var cards = box.children;
     for (var i = 0; i < cards.length; i++) {
       cards[i].classList.toggle("sel", list[i] && list[i].id === selectedId);
+      cards[i].setAttribute('aria-pressed',String(!!list[i] && list[i].id === selectedId));
     }
   }
 
@@ -96,6 +101,7 @@
   }
 
   function goCreate(randomFill) {
+    $('c-name').value=''; $('c-crush').value='';
     profile = { name: "", personaId: null, familyId: null, majorId: null, crushName: "", crushTypeId: null };
     if (randomFill) {
       profile.personaId = U.DATA.personas[Math.floor(Math.random() * U.DATA.personas.length)].id;
@@ -123,6 +129,9 @@
   function beginGame() {
     profile.name = $("c-name").value.trim();
     profile.crushName = $("c-crush").value.trim();
+    profile.gender = $('c-gender').value;
+    profile.orientation = $('c-orientation').value;
+    if (localStorageSafeExists() && !confirm('开始新的一局会覆盖原来的存档，是否继续？')) return;
     if (!profile.personaId) profile.personaId = U.DATA.personas[Math.floor(Math.random() * U.DATA.personas.length)].id;
     if (!profile.familyId) profile.familyId = U.DATA.families[Math.floor(Math.random() * U.DATA.families.length)].id;
     if (!profile.majorId) profile.majorId = U.DATA.majors[Math.floor(Math.random() * U.DATA.majors.length)].id;
@@ -166,6 +175,8 @@
     $("g-major").textContent = " · " + (U.DATA.majors.find(function (m) { return m.id === current.meta.majorId; }) || {}).name;
     $("g-path").textContent = current.path ? pathName(current.path) : "自由探索";
     $("g-time").textContent = U.semNames[current.sem - 1] + " · 第 " + current.week + " 周";
+    $('semester-label').textContent = '第 '+current.sem+' / 8 学期 · '+({man:'男性',woman:'女性',nonbinary:'非二元',unspecified:'未指定性别'}[current.meta.gender]||'未指定性别');
+    $('semester-progress').value=current.sem;
     $("g-money").textContent = current.money;
     $("g-fam").textContent = "(" + fam.name + ")";
     $("num-ac").textContent = current.ac; $("bar-ac").style.width = current.ac + "%";
@@ -177,7 +188,7 @@
     $("r-fails").textContent = current.fails;
     $("r-scholar").textContent = current.scholarshipCnt;
     var crushInfo = current.crushMet ? ("❤ " + current.meta.crushName + (current.couple ? "（在一起了）" : "（好感" + current.love + "）")) : "❤ 尚未遇见TA";
-    $("r-crush").textContent = crushInfo;
+    $('r-crush').textContent = current.meta.orientation==='none' ? '本局不发展恋爱' : crushInfo + (current.meta.crushGender ? ' · '+({man:'男性',woman:'女性',nonbinary:'非二元'}[current.meta.crushGender]||'') : '');
   }
 
   function feedNode(entry) {
@@ -218,11 +229,17 @@
   function renderChoices() {
     var box = $("choices");
     box.innerHTML = "";
+    var recent=current.feed.slice(-4).map(function(e){return typeof e.data==='string'?e.data:JSON.stringify(e.data);}).join(' ');
+    var study=/图书馆|自习|复习|考试|论文|高数/.test(recent);
+    var image=study?'assets/library.jpg':'assets/campus.jpg';
+    if($('scene-image').getAttribute('src')!==image)$('scene-image').src=image;
+    $('scene-image').alt=study?'夕阳照进大学图书馆':'晨光中的校园小路';
+    $('scene-caption').textContent=study?'书页之间，慢慢成长':'校园日常，故事继续';
     if (!pendingView || pendingView.type === "ending") return;
     var opts;
     if (pendingView.type === "action") {
       pendingView.actions.forEach(function (a) {
-        var btn = el("div", "choice", (a.icon ? a.icon + " " : "") + a.name + (a.desc ? " —— " + a.desc : ""));
+        var btn = el("button", "choice", (a.icon ? a.icon + " " : "") + a.name + (a.desc ? " —— " + a.desc : ""));
         btn.onclick = function () { onAction(a.id); };
         box.appendChild(btn);
       });
@@ -230,7 +247,8 @@
     }
     if (pendingView.type === "beat" || pendingView.type === "event") {
       pendingView.options.forEach(function (o) {
-        var btn = el("div", "choice" + (o.enabled ? "" : " off"), (o.enabled ? "👉 " : "🔒 ") + o.label);
+        var btn = el("button", "choice" + (o.enabled ? "" : " off"), (o.enabled ? "👉 " : "🔒 ") + o.label);
+        btn.disabled=!o.enabled;
         btn.onclick = function () { if (o.enabled) onOption(pendingView.type, o.idx); };
         box.appendChild(btn);
       });
@@ -287,7 +305,7 @@
     var got = loadGallery();
     var list = U.DATA.endings.slice().sort(function (a, b) {
       var order = { S: 0, A: 1, B: 2, C: 3, D: 4 };
-      return (order[a.rank] || 9) - (order[b.rank] || 9) || (a.id < b.id ? -1 : 1);
+      return (order[a.rank] ?? 9) - (order[b.rank] ?? 9) || (a.id < b.id ? -1 : 1);
     });
     list.forEach(function (e) {
       var unlocked = got.indexOf(e.id) >= 0;
@@ -303,12 +321,13 @@
 
   // ---------- 事件绑定 ----------
   function bind() {
+    $('btn-create-back').onclick=function(){show('screen-home');initHome();};
     $("btn-new").onclick = function () { goCreate(false); };
     $("btn-random").onclick = function () { goCreate(true); };
     $("btn-continue").onclick = continueGame;
     $("btn-begin").onclick = beginGame;
-    $("btn-save").onclick = function () { saveState(); alert("已保存，可放心回到主菜单。"); };
-    $("btn-menu").onclick = function () { if (confirm("回到主菜单？当前进度已自动保存。")) { show("screen-home"); initHome(); } };
+    $("btn-save").onclick = function () { if(saveState())notify('进度已保存，可以下次继续。'); };
+    $("btn-menu").onclick = function () { var saved=saveState(); if (confirm(saved ? '回到主菜单？当前进度已保存。' : '保存失败，回到主菜单可能丢失进度，仍然返回？')) { show('screen-home'); initHome(); } };
     $("btn-gallery").onclick = renderGallery;
     $("btn-gallery2").onclick = renderGallery;
     $("btn-gback").onclick = function () { show("screen-home"); initHome(); };

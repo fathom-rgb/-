@@ -5,13 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>大学文字模拟器 · UniLifeSim</title>
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/campus.css">
+<link rel="stylesheet" href="css/identity.css">
+<meta name="description" content="在八个学期里，平衡学习、友谊与生活。带着自己的选择，走向不同的大学结局。">
 </head>
 <body>
 <div id="app">
   <!-- 封面 / 主菜单 -->
   <section id="screen-home" class="screen active">
     <div class="home-box">
-      <h1 class="logo">🎓 大学文字模拟器</h1>
+      <img class="cover-art" src="assets/campus.jpg" alt="晨光穿过树荫，学生走在校园小路上" width="1536" height="1024" fetchpriority="high">
+      <div class="home-copy"><p class="overline">UNILIFESIM / 你的青春存档</p>
+      <h1 class="logo">把四年，<br>过成自己的故事。</h1>
       <p class="sub">四年青春，从第一堂高数课开始。你的选择，决定结局。</p>
       <div class="home-actions">
         <button id="btn-new" class="btn btn-primary">📝 新的开始</button>
@@ -19,6 +24,7 @@
         <button id="btn-gallery" class="btn">🏆 结局图鉴</button>
       </div>
       <p class="tiny" id="play-count"></p>
+      <p class="home-foot">8 个学期 · 多种人生方向 · 自动存档</p><a class="portfolio-link" href="https://fathom-rgb.github.io/dwf.github.io/">戴文凡的作品集 ↗</a></div>
     </div>
   </section>
 
@@ -26,7 +32,9 @@
   <section id="screen-create" class="screen">
     <div class="create-box">
       <h2>👤 新建角色</h2>
+      <p class="create-intro">选择你的起点。性格、家境和专业会影响旅程，未选择的项目将随机分配。</p>
       <label>你的名字<input id="c-name" maxlength="8" placeholder="留空随机"></label>
+      <div class="identity-grid"><label>角色性别<select id="c-gender"><option value="unspecified">不指定</option><option value="woman">女性</option><option value="man">男性</option><option value="nonbinary">非二元</option></select></label><label>性取向 / 心动倾向<select id="c-orientation"><option value="any">不限性别 / 双性或泛性倾向</option><option value="women">喜欢女性</option><option value="men">喜欢男性</option><option value="nonbinary">喜欢非二元性别</option><option value="none">这次不发展恋爱</option></select></label></div><p class="create-intro">性别不改变能力数值。恋爱倾向用于生成心动对象；不发展恋爱是一种游玩选择，不等同于无性恋。</p>
       <fieldset><legend>性格 · 决定初始属性</legend><div id="c-personas" class="opt-grid"></div></fieldset>
       <fieldset><legend>家境 · 决定生活费</legend><div id="c-families" class="opt-grid"></div></fieldset>
       <fieldset><legend>专业方向</legend><div id="c-majors" class="opt-grid"></div></fieldset>
@@ -36,6 +44,7 @@
       </fieldset>
       <div class="row">
         <button id="btn-random" class="btn">🎲 随机一局</button>
+        <button id="btn-create-back" class="btn">返回封面</button>
         <button id="btn-begin" class="btn btn-primary">🚀 开始大学生活</button>
       </div>
     </div>
@@ -50,6 +59,7 @@
         <div class="money-line">💰 余额 <b id="g-money">0</b> 元 <span id="g-fam"></span></div>
       </div>
       <div class="stats">
+        <div class="semester-track"><span id="semester-label">四年进度</span><progress id="semester-progress" max="8" value="0" aria-label="学期进度"></progress></div>
         <div class="stat"><span>📚 学业</span><div class="bar"><i id="bar-ac"></i></div><b id="num-ac"></b></div>
         <div class="stat"><span>🗣️ 社交</span><div class="bar"><i id="bar-so"></i></div><b id="num-so"></b></div>
         <div class="stat"><span>💪 体质</span><div class="bar"><i id="bar-hp"></i></div><b id="num-hp"></b></div>
@@ -66,6 +76,7 @@
       <button id="btn-menu" class="btn btn-mini">🏠 主菜单</button>
     </aside>
     <main id="main">
+      <figure class="scene"><img id="scene-image" src="assets/campus.jpg" alt="校园晨光" width="1536" height="1024"><figcaption><span id="scene-caption">校园生活</span><small>UNILIFESIM</small></figcaption></figure>
       <div id="log"></div>
       <div id="choices" class="choices"></div>
     </main>
@@ -98,6 +109,7 @@
     </div>
   </section>
 </div>
+<p id="save-status" class="save-status" role="status" aria-live="polite" hidden></p>
 
 <script src="js/data/core.js"></script>
 <script src="js/data/actions.js"></script>
